@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta GraphQL</title>
+</head>
+<body>
+
+<div>
+  <label for="personaId">ID de Persona:</label>
+  <input type="number" id="personaId" />
+  <button onclick="fetchData()">Consultar</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+  // Función para hacer la consulta GraphQL al servidor
+  async function fetchData() {
+    const personaId = document.getElementById('personaId').value;
+
+    const response = await fetch('http://localhost:3000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+          query {
+            persona(id: ${personaId}) {
+              id
+              nombre
+              edad
+              multas {
+                id
+                monto
+                descripcion
+              }
+            }
+          }
+        `,
+      }),
+    });
+
+    const result = await response.json();
+    displayData(result.data.persona);
+  }
+
+  // Función para mostrar los datos en la interfaz
+  function displayData(data) {
+    const resultDiv = document.getElementById('result');
+    
+    if (!data) {
+      resultDiv.innerHTML = '<p>No se encontró ninguna persona con el ID proporcionado.</p>';
+      return;
+    }
+
+    resultDiv.innerHTML = `
+      <h2>${data.nombre}</h2>
+      <p>Edad: ${data.edad}</p>
+      <h3>Multas:</h3>
+      <ul>
+        ${data.multas.map(multa => `
+          <li>
+            <strong>ID:</strong> ${multa.id}, 
+            <strong>Monto:</strong> ${multa.monto}, 
+            <strong>Descripción:</strong> ${multa.descripcion}
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  }
+</script>
+
+</body>
+</html>
